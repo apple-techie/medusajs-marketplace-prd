@@ -276,3 +276,11 @@ For questions about the PRD or implementation:
 ---
 
 Last Updated: January 2025
+
+## Migration Notes
+
+This PRD has been restructured from the original files:
+- All legacy files have been migrated to organized sections
+- Content has been preserved and enhanced with better organization
+- The structure now supports parallel development using git worktrees
+- See `MIGRATION_SUMMARY.md` for details about the restructuring process
