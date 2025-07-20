@@ -144,10 +144,10 @@ interface CommissionEngine {
 ```
 
 ### Commission Tiers
-- **Bronze Tier**: 5-10% commission
-- **Silver Tier**: 10-15% commission  
-- **Gold Tier**: 15-20% commission
-- **Custom Agreements**: Negotiated rates
+- **Bronze Tier**: 15% commission ($0 - $15,000 monthly sales)
+- **Silver Tier**: 20% commission ($15,001 - $50,000 monthly sales)  
+- **Gold Tier**: 25% commission ($50,001+ monthly sales)
+- **Custom Agreements**: Negotiated rates for enterprise partners
 
 ## Refund Processing
 

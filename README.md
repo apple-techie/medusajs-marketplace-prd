@@ -4,6 +4,8 @@
 
 This repository contains the comprehensive Product Requirements Document (PRD) for a MedusaJS-powered multi-vendor marketplace platform. The documentation is organized into modular sections for easy navigation and parallel development using git worktrees.
 
+**📌 Implementation Recommendation**: See [IMPLEMENTATION-RECOMMENDATIONS.md](IMPLEMENTATION-RECOMMENDATIONS.md) for guidance on using the MedusaJS Next.js Starter as the base for the storefront.
+
 ## Project Structure
 
 ```
@@ -50,7 +52,7 @@ medusajs-marketplace-prd/
 ## Key Features
 
 ### 1. Multi-Vendor Architecture
-- **Shop Partners**: Affiliate commission-based model (5-15% tiers)
+- **Shop Partners**: Affiliate commission-based model (15-25% tiers)
 - **Brand Partners**: Direct product suppliers with inventory management
 - **Distributor Partners**: Fulfillment centers with order routing
 - **Driver Partners**: Last-mile delivery network
