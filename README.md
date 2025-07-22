@@ -8,7 +8,7 @@
 
 This repository contains the comprehensive Product Requirements Document (PRD) for a MedusaJS-powered multi-vendor marketplace platform. The documentation is organized into modular sections for easy navigation and parallel development using git worktrees.
 
-**📌 Implementation Recommendation**: See [IMPLEMENTATION-RECOMMENDATIONS.md](IMPLEMENTATION-RECOMMENDATIONS.md) for guidance on using the MedusaJS Next.js Starter as the base for the storefront.
+**📌 Implementation Strategy**: We're using a hybrid approach combining MedusaJS Next.js Starter for the customer storefront with Mercur marketplace components for vendor features. See [IMPLEMENTATION-STRATEGY.md](IMPLEMENTATION-STRATEGY.md) for the complete technical roadmap.
 
 ## Project Structure
 
@@ -229,18 +229,25 @@ git worktree remove ../marketplace-vendors
 - **Cache**: Redis
 - **Queue**: Bull/Redis
 - **Real-time**: Socket.io
+- **Payment**: Stripe Connect
 
-### Frontend
+### Frontend (Hybrid Approach)
+- **Customer Storefront**: Next.js Starter (customized)
+- **Vendor Portal**: Mercur-inspired components
 - **Framework**: Next.js 14 (App Router)
 - **UI Library**: shadcn/ui
 - **State Management**: Zustand
 - **Data Fetching**: TanStack Query
 - **Styling**: Tailwind CSS
+- **Component Architecture**: Monorepo with shared packages
 
 ### Infrastructure
 - **Hosting**: AWS/Vercel
 - **CDN**: CloudFront
 - **Storage**: S3
+- **Search**: MeiliSearch
+- **Email**: SendGrid
+- **Analytics**: Segment
 - **Monitoring**: DataDog/Sentry
 
 ## API Documentation

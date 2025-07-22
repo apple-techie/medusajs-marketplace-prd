@@ -2,7 +2,7 @@
 
 ## Overview
 
-Each vendor type has a customized dashboard interface designed for their specific needs and workflows. All dashboards share a common design language while providing role-specific functionality.
+Each vendor type has a customized dashboard interface designed for their specific needs and workflows. All dashboards share a common design language while providing role-specific functionality. The implementation follows a hybrid approach using Mercur-inspired vendor management patterns adapted for our three distinct vendor types (Shop, Brand, Distributor).
 
 ## Shop Dashboard
 
@@ -12,34 +12,19 @@ The shop dashboard is designed for affiliate partners who earn commissions by re
 ### Layout Structure
 
 ```tsx
-// app/shop/layout.tsx
+// apps/vendor-portal/app/shop/layout.tsx
+// Built on Mercur vendor dashboard patterns, adapted for shop partners
 export default function ShopLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
-      {/* Top Navigation Bar */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-6">
-              <Link href="/shop" className="flex items-center gap-2">
-                <Store className="h-6 w-6" />
-                <span className="font-semibold">Shop Dashboard</span>
-              </Link>
-              <nav className="hidden md:flex items-center gap-6">
-                <NavLink href="/shop">Overview</NavLink>
-                <NavLink href="/shop/sales">Sales</NavLink>
-                <NavLink href="/shop/marketing">Marketing</NavLink>
-                <NavLink href="/shop/analytics">Analytics</NavLink>
-                <NavLink href="/shop/settings">Settings</NavLink>
-              </nav>
-            </div>
-            <div className="flex items-center gap-4">
-              <NotificationBell />
-              <UserMenu />
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Top Navigation Bar - Using shared vendor navigation component */}
+      <VendorNavigation vendorType="shop">
+        <NavLink href="/shop">Overview</NavLink>
+        <NavLink href="/shop/sales">Sales</NavLink>
+        <NavLink href="/shop/marketing">Marketing</NavLink>
+        <NavLink href="/shop/analytics">Analytics</NavLink>
+        <NavLink href="/shop/settings">Settings</NavLink>
+      </VendorNavigation>
       
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">

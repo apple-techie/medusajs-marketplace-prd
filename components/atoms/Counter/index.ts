@@ -1,0 +1,1 @@
+export { Counter, type CounterProps, counterVariants } from './Counter';

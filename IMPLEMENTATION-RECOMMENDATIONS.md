@@ -193,3 +193,20 @@ Since we're using the Next.js Starter:
 ## Conclusion
 
 Using the Next.js Starter as a base is the **recommended approach**. It provides a solid foundation that will accelerate development by 2-3 months while still allowing full customization for our marketplace-specific requirements. The key is to build on top of it rather than modifying core functionality, ensuring we can still benefit from updates and community support.
+
+## Updated Strategy (July 22, 2025)
+
+Based on further analysis, we've refined our approach to a **hybrid strategy**:
+
+1. **Customer Storefront**: MedusaJS Next.js Starter (customized)
+2. **Vendor Features**: Mercur-inspired components adapted for our vendor types
+3. **Shared Components**: Monorepo structure with shared UI package
+4. **Custom Development**: Age verification, delivery network, operations hub
+
+This hybrid approach leverages:
+- ✅ Proven e-commerce functionality from Next.js Starter
+- ✅ Marketplace patterns from Mercur (adapted, not direct dependency)
+- ✅ Custom features for our unique requirements
+- ✅ Consistent design system across all applications
+
+See [IMPLEMENTATION-STRATEGY.md](IMPLEMENTATION-STRATEGY.md) for the complete technical roadmap.

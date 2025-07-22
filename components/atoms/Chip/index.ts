@@ -1,0 +1,1 @@
+export { Chip, ChipGroup, ChipIcons, type ChipProps, type ChipGroupProps, chipVariants } from './Chip';

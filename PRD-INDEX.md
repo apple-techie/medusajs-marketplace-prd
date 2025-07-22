@@ -26,6 +26,12 @@ This index provides a comprehensive mapping of all Product Requirements Document
   - Data models
   - Migration strategy
 
+- **[04-FRONTEND-ARCHITECTURE.md](01-CORE-ARCHITECTURE/04-FRONTEND-ARCHITECTURE.md)** *(NEW)*
+  - Hybrid approach (Next.js Starter + Mercur)
+  - Monorepo structure
+  - Shared component architecture
+  - Application-specific implementations
+
 ### 2. Vendor Management
 **Location**: `02-VENDOR-MANAGEMENT/`
 
@@ -89,6 +95,12 @@ This index provides a comprehensive mapping of all Product Requirements Document
   - Loyalty points
   - Preferences management
 
+- **[03-STOREFRONT-IMPLEMENTATION.md](04-CUSTOMER-EXPERIENCE/03-STOREFRONT-IMPLEMENTATION.md)** *(NEW)*
+  - Next.js Starter customization
+  - Multi-vendor features
+  - Marketplace UI components
+  - Mobile experience
+
 ### 5. Operations Hub
 **Location**: `05-OPERATIONS-HUB/`
 
@@ -113,6 +125,12 @@ This index provides a comprehensive mapping of all Product Requirements Document
   - Page layouts
   - Interactive elements
   - Loading states
+
+- **[03-COMPONENT-ARCHITECTURE.md](06-UI-UX/03-COMPONENT-ARCHITECTURE.md)** *(NEW)*
+  - Monorepo component structure
+  - Shared UI package
+  - Component patterns
+  - Testing strategy
 
 ### 7. Commerce Features
 **Location**: `07-COMMERCE-FEATURES/`
@@ -245,19 +263,25 @@ git worktree add ../marketplace-api -b feature/technical-specs
 ## Documentation Status
 
 ✅ **Complete** - All sections are documented with the following distribution:
-- Core Architecture (3 documents)
+- Core Architecture (4 documents) - *Updated with Frontend Architecture*
 - Vendor Management (4 documents)
 - Order Management (3 documents)
-- Customer Experience (2 documents)
+- Customer Experience (3 documents) - *Added Storefront Implementation*
 - Operations Hub (1 document)
-- UI/UX Design (2 documents)
+- UI/UX Design (3 documents) - *Added Component Architecture*
 - Commerce Features (3 documents)
 - Delivery Network (3 documents)
 - Analytics & Reporting (1 document)
 - Security & Compliance (1 document)
 - Technical Specifications (1 document)
 
-**Total: 24 specification documents across 11 sections**
+**Total: 27 specification documents across 11 sections**
+
+**Latest Updates (July 22, 2025)**:
+- Added hybrid implementation strategy (Next.js Starter + Mercur)
+- Created Frontend Architecture specification
+- Added Storefront Implementation guide
+- Created Component Architecture documentation
 
 ## Contributing
 
