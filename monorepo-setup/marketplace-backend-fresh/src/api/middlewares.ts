@@ -1,5 +1,11 @@
-import { MiddlewaresConfig } from "@medusajs/framework"
-import { config as vendorCorsConfig } from "./middlewares/vendor-cors"
+import { defineMiddlewares } from "@medusajs/framework/http"
+import { vendorCors } from "./middlewares/vendor-cors"
 
-// Export the middleware configurations directly
-export default vendorCorsConfig.routes
+export default defineMiddlewares({
+  routes: [
+    {
+      matcher: "/vendor/**",
+      middlewares: [vendorCors],
+    },
+  ],
+})
