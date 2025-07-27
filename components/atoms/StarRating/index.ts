@@ -1,1 +1,0 @@
-export { StarRating, StarRatingDisplay, type StarRatingProps } from './StarRating';

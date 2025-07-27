@@ -1,8 +1,12 @@
 {
-  "extends": "@repo/typescript-config/react-library.json",
-  "compilerOptions": {
-    "outDir": "dist"
-  },
+  "extends": "@marketplace/typescript-config/react-library.json",
   "include": ["src"],
-  "exclude": ["node_modules", "dist"]
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["DOM", "ES2015"],
+    "outDir": "./dist",
+    "module": "ESNext",
+    "target": "ES2015",
+    "moduleResolution": "bundler"
+  }
 }

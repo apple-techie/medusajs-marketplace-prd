@@ -1,28 +1,64 @@
-# Turborepo starter
+# MedusaJS Marketplace Monorepo
 
-This Turborepo starter is maintained by the Turborepo core team.
+A comprehensive multi-vendor marketplace platform built with MedusaJS, Next.js, and Turborepo.
 
-## Using this example
+## 🚀 Quick Start
 
-Run the following command:
+### Prerequisites
+- Node.js 18+
+- PostgreSQL 14+
+- Redis 6+
 
-```sh
-npx create-turbo@latest
+### Installation
+
+```bash
+# Install dependencies
+npm install --legacy-peer-deps
+
+# Build all packages
+npm run build
+
+# Start development servers
+npm run dev
 ```
 
-## What's inside?
+## 📁 Project Structure
 
-This Turborepo includes the following packages/apps:
+```
+medusajs-marketplace-monorepo/
+├── apps/
+│   ├── backend/              # MedusaJS v2 backend
+│   ├── storefront/           # Next.js customer storefront
+│   ├── vendor-portal/        # Vendor dashboard application
+│   ├── operations-hub/       # Operations management dashboard
+│   └── admin-extended/       # Extended admin features
+├── packages/
+│   ├── ui/                   # Shared UI components (shadcn/ui)
+│   ├── marketplace-core/     # Business logic and calculations
+│   ├── types/                # Shared TypeScript types
+│   ├── eslint-config/        # ESLint configuration
+│   └── typescript-config/    # TypeScript configuration
+└── turbo.json                # Turborepo configuration
+```
 
-### Apps and Packages
+## 💼 Business Model
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+### Vendor Types
+1. **Shop Partners** (Affiliate Model)
+   - Bronze: 15% commission (< $15,000/month)
+   - Silver: 18% commission ($15,000 - $50,000/month)
+   - Gold: 22% commission ($50,000+/month)
+   - Gold+: 25% commission (Special status)
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+2. **Brand Partners**
+   - Starter: 10% platform fee ($0 - $100k/month)
+   - Growth: 15% platform fee ($100k - $500k/month)
+   - Enterprise: 20% platform fee ($500k+/month)
+
+3. **Distributor Partners**
+   - Pioneer: 3% (first 6 months in region)
+   - Standard: 10% base rate
+   - Volume discounts: 10% → 7% → 5% → 3%
 
 ### Utilities
 

@@ -1,1 +1,0 @@
-export { Checkbox, type CheckboxProps, checkboxVariants } from './Checkbox';

@@ -1,0 +1,298 @@
+import type { MedusaRequest, MedusaResponse } from "@medusajs/framework"
+import { MedusaError } from "@medusajs/framework/utils"
+import { Modules, ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { authenticate, AuthenticatedRequest } from "../../../../../middleware/vendor-auth"
+import MarketplaceModuleService from "../../../../../modules/marketplace/service"
+import { MARKETPLACE_MODULE } from "../../../../../modules/marketplace"
+
+// GET /admin/vendors/:id/analytics - Get vendor analytics
+export const GET = [
+  authenticate,
+  async (req: AuthenticatedRequest, res: MedusaResponse) => {
+    const vendorId = req.params.id
+    const { period = '30d' } = req.query
+    const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
+    
+    // Ensure vendor can only access their own analytics
+    if (req.vendor?.vendor_id !== vendorId) {
+      throw new MedusaError(
+        MedusaError.Types.UNAUTHORIZED,
+        "You can only access your own analytics"
+      )
+    }
+    
+    try {
+    // Calculate date range based on period
+    const endDate = new Date()
+    const startDate = new Date()
+    
+    switch (period) {
+      case '7d':
+        startDate.setDate(endDate.getDate() - 7)
+        break
+      case '30d':
+        startDate.setDate(endDate.getDate() - 30)
+        break
+      case '90d':
+        startDate.setDate(endDate.getDate() - 90)
+        break
+      case 'ytd':
+        startDate.setMonth(0, 1) // January 1st of current year
+        break
+      default:
+        startDate.setDate(endDate.getDate() - 30)
+    }
+
+    // Get comparison period for change calculations
+    const comparisonStartDate = new Date(startDate)
+    const comparisonEndDate = new Date(startDate)
+    comparisonStartDate.setDate(comparisonStartDate.getDate() - (endDate.getDate() - startDate.getDate()))
+
+    // Get all orders containing vendor's products
+    const { data: orders } = await query.graph({
+      entity: "order",
+      fields: [
+        "id",
+        "display_id",
+        "status",
+        "fulfillment_status",
+        "payment_status",
+        "total",
+        "subtotal",
+        "currency_code",
+        "created_at",
+        "customer.*",
+        "shipping_address.*",
+        "items.*",
+        "items.variant.*",
+        "items.product.*",
+      ],
+      filters: {
+        created_at: {
+          $gte: startDate.toISOString(),
+          $lte: endDate.toISOString(),
+        }
+      },
+    })
+
+    // Filter to only include orders with vendor's products
+    const vendorOrders = orders.filter((order: any) => 
+      order.items.some((item: any) => 
+        item.product?.metadata?.vendor_id === vendorId
+      )
+    )
+
+    // Get comparison period orders
+    const { data: comparisonOrders } = await query.graph({
+      entity: "order",
+      fields: ["id", "total", "customer.id", "items.*", "items.product.*"],
+      filters: {
+        created_at: {
+          $gte: comparisonStartDate.toISOString(),
+          $lte: comparisonEndDate.toISOString(),
+        }
+      },
+    })
+
+    const vendorComparisonOrders = comparisonOrders.filter((order: any) => 
+      order.items.some((item: any) => 
+        item.product?.metadata?.vendor_id === vendorId
+      )
+    )
+
+    // Calculate overview metrics
+    const overview = calculateOverviewMetrics(vendorOrders)
+    const comparisonOverview = calculateOverviewMetrics(vendorComparisonOrders)
+    const comparison = calculateComparison(overview, comparisonOverview)
+
+    // Calculate sales by day
+    const salesByDay = calculateSalesByDay(vendorOrders, startDate, endDate)
+
+    // Calculate top products
+    const topProducts = calculateTopProducts(vendorOrders)
+
+    // Calculate order status breakdown
+    const orderStatus = calculateOrderStatus(vendorOrders)
+
+    // Calculate customer insights
+    const customerInsights = calculateCustomerInsights(vendorOrders)
+
+    res.json({
+      overview,
+      comparison,
+      sales_by_day: salesByDay,
+      top_products: topProducts,
+      order_status: orderStatus,
+      customer_insights: customerInsights,
+    })
+  } catch (error) {
+    res.status(500).json({ 
+      message: "Error fetching analytics", 
+      error: error.message 
+    })
+  }
+}
+
+function calculateOverviewMetrics(orders: any[]) {
+  const totalRevenue = orders.reduce((sum, order) => {
+    // Calculate vendor-specific revenue from their items only
+    const vendorRevenue = order.items
+      .filter((item: any) => item.product?.metadata?.vendor_id)
+      .reduce((itemSum: number, item: any) => itemSum + (item.unit_price * item.quantity), 0)
+    return sum + vendorRevenue
+  }, 0)
+
+  const uniqueCustomers = new Set(orders.map(order => order.customer?.id).filter(Boolean))
+  const totalOrders = orders.length
+  const totalCustomers = uniqueCustomers.size
+  const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
+  const conversionRate = 2.5 // Mock conversion rate - in real system, calculate from sessions
+
+  return {
+    total_revenue: totalRevenue,
+    total_orders: totalOrders,
+    total_customers: totalCustomers,
+    average_order_value: averageOrderValue,
+    conversion_rate: conversionRate,
+    currency_code: orders[0]?.currency_code || 'usd',
+  }
+}
+
+function calculateComparison(current: any, previous: any) {
+  const calculateChange = (curr: number, prev: number) => {
+    if (prev === 0) return curr > 0 ? 100 : 0
+    return ((curr - prev) / prev) * 100
+  }
+
+  return {
+    revenue_change: calculateChange(current.total_revenue, previous.total_revenue),
+    orders_change: calculateChange(current.total_orders, previous.total_orders),
+    customers_change: calculateChange(current.total_customers, previous.total_customers),
+    aov_change: calculateChange(current.average_order_value, previous.average_order_value),
+  }
+}
+
+function calculateSalesByDay(orders: any[], startDate: Date, endDate: Date) {
+  const salesByDay: Record<string, { revenue: number; orders: number }> = {}
+  
+  // Initialize all days in range
+  const currentDate = new Date(startDate)
+  while (currentDate <= endDate) {
+    const dateKey = currentDate.toISOString().split('T')[0]
+    salesByDay[dateKey] = { revenue: 0, orders: 0 }
+    currentDate.setDate(currentDate.getDate() + 1)
+  }
+
+  // Aggregate order data
+  orders.forEach(order => {
+    const dateKey = new Date(order.created_at).toISOString().split('T')[0]
+    if (salesByDay[dateKey]) {
+      const vendorRevenue = order.items
+        .filter((item: any) => item.product?.metadata?.vendor_id)
+        .reduce((sum: number, item: any) => sum + (item.unit_price * item.quantity), 0)
+      
+      salesByDay[dateKey].revenue += vendorRevenue
+      salesByDay[dateKey].orders += 1
+    }
+  })
+
+  return Object.entries(salesByDay)
+    .map(([date, data]) => ({ date, ...data }))
+    .sort((a, b) => a.date.localeCompare(b.date))
+}
+
+function calculateTopProducts(orders: any[]) {
+  const productStats: Record<string, any> = {}
+
+  orders.forEach(order => {
+    order.items
+      .filter((item: any) => item.product?.metadata?.vendor_id)
+      .forEach((item: any) => {
+        const key = `${item.product.id}_${item.variant.id}`
+        if (!productStats[key]) {
+          productStats[key] = {
+            id: item.product.id,
+            title: item.title,
+            variant_title: item.variant.title,
+            quantity_sold: 0,
+            revenue: 0,
+          }
+        }
+        productStats[key].quantity_sold += item.quantity
+        productStats[key].revenue += item.unit_price * item.quantity
+      })
+  })
+
+  return Object.values(productStats)
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 10)
+}
+
+function calculateOrderStatus(orders: any[]) {
+  const statusCounts = {
+    pending: 0,
+    processing: 0,
+    completed: 0,
+    canceled: 0,
+  }
+
+  orders.forEach(order => {
+    if (order.status === 'pending') {
+      statusCounts.pending++
+    } else if (order.status === 'canceled') {
+      statusCounts.canceled++
+    } else if (order.fulfillment_status === 'delivered' || order.status === 'completed') {
+      statusCounts.completed++
+    } else {
+      statusCounts.processing++
+    }
+  })
+
+  return statusCounts
+}
+
+function calculateCustomerInsights(orders: any[]) {
+  const customerOrderCounts: Record<string, number> = {}
+  const locationCounts: Record<string, { city: string; state: string; orders: number }> = {}
+
+  orders.forEach(order => {
+    // Count orders per customer
+    if (order.customer?.id) {
+      customerOrderCounts[order.customer.id] = (customerOrderCounts[order.customer.id] || 0) + 1
+    }
+
+    // Count orders by location
+    if (order.shipping_address) {
+      const locationKey = `${order.shipping_address.city}_${order.shipping_address.province}`
+      if (!locationCounts[locationKey]) {
+        locationCounts[locationKey] = {
+          city: order.shipping_address.city,
+          state: order.shipping_address.province,
+          orders: 0,
+        }
+      }
+      locationCounts[locationKey].orders++
+    }
+  })
+
+  const newCustomers = Object.values(customerOrderCounts).filter(count => count === 1).length
+  const returningCustomers = Object.values(customerOrderCounts).filter(count => count > 1).length
+  
+  const topLocations = Object.values(locationCounts)
+    .sort((a, b) => b.orders - a.orders)
+    .slice(0, 5)
+
+  // Calculate customer lifetime value (simplified)
+  const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0)
+  const totalCustomers = Object.keys(customerOrderCounts).length
+  const customerLifetimeValue = totalCustomers > 0 ? totalRevenue / totalCustomers : 0
+
+  return {
+    new_customers: newCustomers,
+    returning_customers: returningCustomers,
+    top_locations: topLocations,
+    customer_lifetime_value: customerLifetimeValue,
+  }
+}
+  }
+]

@@ -4,140 +4,169 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a comprehensive Product Requirements Document (PRD) for a MedusaJS-powered multi-vendor marketplace platform. The documentation is structured for parallel development using git worktrees and provides detailed specifications for all marketplace components.
+A multi-vendor marketplace implementation using MedusaJS v2 backend with three Next.js frontend applications. The system supports three vendor types (Shop Partners, Brand Partners, Distributor Partners) with commission-based revenue sharing and smart fulfillment routing.
 
-## Architecture & Tech Stack
+## Architecture Overview
 
-### Backend
-- **Framework**: MedusaJS 2.0 (Node.js e-commerce framework)
-- **Database**: PostgreSQL 14+ with TypeORM
-- **Cache**: Redis 6+
-- **Queue**: Bull/Redis
-- **Real-time**: Socket.io
-- **Payment**: Stripe Connect for multi-vendor payment splitting
+### Backend Architecture (MedusaJS v2)
 
-### Frontend
-- **Framework**: Next.js 14 with App Router
-- **UI Library**: shadcn/ui
-- **State Management**: Zustand
-- **Data Fetching**: TanStack Query
-- **Styling**: Tailwind CSS
+The backend extends MedusaJS with custom modules located in `monorepo-setup/marketplace-backend-fresh/`:
 
-### Infrastructure
-- **Hosting**: AWS ECS/Fargate
-- **CDN**: CloudFront
-- **Storage**: S3
-- **Monitoring**: DataDog/Sentry
+- **Marketplace Module** (`src/modules/marketplace/`): Core vendor management system
+  - Vendor entity with types: shop_partner, brand_partner, distributor_partner
+  - Commission tracking with tier-based calculations (15-25%)
+  - Stripe Connect integration for vendor payouts
+  - Smart fulfillment routing algorithm with multi-factor scoring
 
-## Key Architectural Patterns
+- **Age Verification Module** (`src/modules/age_verification/`): Product access control
+  - Configurable age gates (18+/21+)
+  - Session-based verification
 
-### MedusaJS Module Structure
-The platform extends MedusaJS core with custom modules:
-- `affiliate-marketplace`: Commission tracking and tier management
-- `delivery-network`: Driver management and route optimization
-- `vendor-management`: Multi-vendor support (shop, brand, distributor)
-- `unified-catalog`: Product aggregation across vendors
-- `stripe-connect`: Payment splitting and vendor payouts
+### Frontend Architecture (Next.js 14)
 
-### API Architecture
-- RESTful design with `/v1` versioning
-- JWT authentication with role-based access
-- WebSocket support for real-time updates (orders, inventory, delivery tracking)
-- Rate limiting based on user roles
+Three applications in `monorepo-setup/medusajs-marketplace-monorepo/apps/`:
+
+1. **Storefront** (port 3000): Customer-facing shopping experience
+2. **Vendor Portal** (port 3001): Vendor dashboard and management
+3. **Operations Hub** (port 3002): Admin operations center
 
 ## Development Commands
 
-Since this is a PRD repository without implementation code, common commands will depend on the implementation approach:
-
-### For MedusaJS Backend Development
+### Backend Development
 ```bash
-# Initial setup (when implementing)
-npx create-medusa-app@latest marketplace --with-nextjs-starter
+cd monorepo-setup/marketplace-backend-fresh
 
-# Development
-npm run dev:backend   # Start MedusaJS server
-npm run dev:admin    # Start admin dashboard
-npm run dev:storefront # Start Next.js storefront
-
-# Database
-npm run migration:create -- CreateVendorTables
-npm run migration:run
-npm run seed
+# Core commands
+npm run dev                    # Start development server (port 9000)
+npm run build                  # Production build
+npm run seed                   # Basic seed data
+npm run seed:marketplace       # Comprehensive marketplace data
+npm run seed:fulfillment      # Fulfillment locations and rules
+npm run seed:order            # Test order creation
 
 # Testing
-npm run test
-npm run test:integration
+npm run test:routing          # Test fulfillment routing algorithm
+npm run test:unit             # Unit tests
+npm run test:integration:http # HTTP integration tests
 ```
 
-### For Git Worktree Development
+### Frontend Development
 ```bash
-# Create worktrees for parallel development
-git worktree add ../marketplace-core -b feature/core-architecture
-git worktree add ../marketplace-vendors -b feature/vendor-management
-git worktree add ../marketplace-orders -b feature/order-management
+cd monorepo-setup/medusajs-marketplace-monorepo
 
-# List all worktrees
-git worktree list
+# Run all apps
+npm run dev                   # All three apps in parallel
 
-# Remove worktree after merging
-git worktree remove ../marketplace-vendors
+# Run individual apps
+npm run dev:storefront        # Customer storefront only
+npm run dev:vendor           # Vendor portal only  
+npm run dev:ops              # Operations hub only
+
+# Other commands
+npm run build                # Build all apps
+npm run lint                 # Lint all apps
+npm run check-types          # TypeScript validation
 ```
 
-## Key Business Logic
+### Stripe Webhook Development
+```bash
+# Terminal 1: Forward webhooks to local
+stripe listen --forward-to localhost:9000/webhooks/stripe
 
-### Vendor Types & Commission Structure
-1. **Shop Partners**: Affiliate model with 15-25% commission tiers based on monthly revenue
-2. **Brand Partners**: Direct suppliers managing their own inventory
-3. **Distributor Partners**: Fulfillment centers handling multi-brand inventory
+# Terminal 2: Forward Connect webhooks
+stripe listen --forward-to localhost:9000/webhooks/stripe-connect \
+  --events account.updated,account.application.authorized
+```
 
-### Order Flow
-1. Customer places order (potentially through shop referral)
-2. System routes order items to optimal fulfillment locations
-3. Distributor/brand fulfills their items
-4. Driver network handles last-mile delivery
-5. Commission calculated and distributed post-delivery
+## Key Implementation Details
 
-### Age Verification
-- Configurable age gates (18+/21+) based on product categories
-- Multiple verification methods supported
-- Session-based verification with compliance logging
+### Database Schema
+
+The marketplace extends MedusaJS with these key entities:
+- **Vendor**: Core vendor entity with Stripe integration
+- **VendorProduct**: Links products to vendors with commission rates
+- **FulfillmentLocation**: Vendor warehouse/store locations
+- **FulfillmentRoutingRule**: Smart routing configuration
+
+### API Endpoints
+
+Custom endpoints in `src/api/`:
+- `/admin/vendors/*` - Vendor management (admin only)
+- `/store/vendors/*` - Public vendor endpoints
+- `/webhooks/stripe-connect` - Stripe Connect webhooks
+- `/admin/vendors/commission-report` - Commission analytics
+
+### Authentication Flow
+
+1. Admin users authenticate via `/auth/admin/emailpass`
+2. Vendors receive JWT tokens with vendor context
+3. Vendor endpoints validate ownership through middleware
+
+### Fulfillment Routing Algorithm
+
+Located in `src/modules/marketplace/services/fulfillment-routing.ts`:
+- Multi-factor scoring: distance (30%), inventory (25%), vendor priority (20%), cost (15%), reliability (10%)
+- Supports split fulfillment across multiple vendors
+- Configurable routing rules per vendor/product
+
+### Environment Configuration
+
+Key environment variables:
+```bash
+# Database (Remote PostgreSQL)
+DATABASE_URL=postgresql://user:pass@host:5432/db
+
+# Stripe (Currently using live keys - switch to test for dev)
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# Frontend
+NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=pk_...
+NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://localhost:9000
+```
 
 ## Testing Approach
 
-When implementing, follow these patterns:
+### Backend Testing
+- Unit tests for business logic (commission calculations, routing)
+- Integration tests for API endpoints
+- Routing algorithm tests with various scenarios
 
-```bash
-# Unit tests for services
-npm run test:unit -- commission-calculator.spec.ts
+### Manual Testing Credentials
+- Admin: `admin@medusa.com` / `medusa123`
+- Test vendors created via seed scripts
 
-# Integration tests for API endpoints
-npm run test:integration -- /api/vendors
+## Critical Business Logic
 
-# E2E tests for critical flows
-npm run test:e2e -- checkout-flow.spec.ts
-```
+### Commission Calculation
+- Shop Partners: 15-25% based on monthly revenue tiers
+- Brand Partners: Fixed commission rates
+- Distributor Partners: Volume-based pricing
 
-## Important Implementation Notes
+### Order Fulfillment Flow
+1. Order placed with items from multiple vendors
+2. Routing algorithm determines optimal fulfillment
+3. Order split into vendor-specific fulfillments
+4. Each vendor processes their items
+5. Commission calculated post-delivery
 
-1. **Use MedusaJS Next.js Starter** as the base for the storefront (see IMPLEMENTATION-RECOMMENDATIONS.md)
-2. **Multi-vendor considerations**: Every API endpoint must respect vendor context and permissions
-3. **Payment splitting**: All transactions go through Stripe Connect for automated commission handling
-4. **Real-time requirements**: Order tracking, inventory updates, and driver locations need WebSocket implementation
-5. **Fulfillment routing**: The algorithm in `02-FULFILLMENT-ROUTING.md` is critical for operational efficiency
+### Vendor Onboarding
+1. Admin creates vendor account
+2. Vendor completes Stripe Connect onboarding
+3. System webhooks update vendor status
+4. Vendor gains access to portal
 
-## PRD Navigation
+## Module Dependencies
 
-The documentation is organized into 11 main sections:
-- `01-CORE-ARCHITECTURE/`: Platform overview, system design, database schema
-- `02-VENDOR-MANAGEMENT/`: Vendor types, commissions, onboarding, dashboards
-- `03-ORDER-MANAGEMENT/`: Order flow, fulfillment routing, operations
-- `04-CUSTOMER-EXPERIENCE/`: Age verification, customer dashboard
-- `05-OPERATIONS-HUB/`: Central operations dashboard
-- `06-UI-UX/`: Design system and component specifications
-- `07-COMMERCE-FEATURES/`: Product catalog, cart, payments
-- `08-DELIVERY-NETWORK/`: Driver management, tracking, routing
-- `09-ANALYTICS-REPORTING/`: Business intelligence
-- `10-SECURITY-COMPLIANCE/`: Security architecture
-- `11-TECHNICAL-SPECIFICATIONS/`: API documentation
+When modifying the marketplace module:
+1. Run migrations after model changes
+2. Update TypeORM entities in `src/modules/marketplace/models/`
+3. Regenerate types if needed
+4. Test with seed scripts
 
-Refer to `PRD-INDEX.md` for detailed navigation and `README.md` for implementation phases.
+## Known Integration Points
+
+- **Stripe Connect**: Vendor payouts and onboarding
+- **PostgreSQL**: Remote database at 146.190.116.149
+- **Redis**: Remote cache at same host
+- **Frontend Apps**: Require correct publishable key

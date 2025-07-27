@@ -1,14 +1,21 @@
 {
   "name": "medusajs-marketplace-monorepo",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "dev:all": "turbo run dev --parallel",
+    "dev:storefront": "turbo run dev --filter=@marketplace/storefront",
+    "dev:vendor": "turbo run dev --filter=@marketplace/vendor-portal",
+    "dev:ops": "turbo run dev --filter=@marketplace/operations-hub",
+    "dev:frontend": "turbo run dev --filter=@marketplace/storefront --filter=@marketplace/vendor-portal --filter=@marketplace/operations-hub",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types"
   },
   "devDependencies": {
+    "@tanstack/react-query-devtools": "^5.83.0",
     "prettier": "^3.6.2",
     "turbo": "^2.5.5",
     "typescript": "5.8.3"
@@ -16,9 +23,13 @@
   "engines": {
     "node": ">=18"
   },
-  "packageManager": "npm@11.4.2",
+  "packageManager": "npm@10.8.2",
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "@medusajs/js-sdk": "^2.8.7",
+    "@tanstack/react-query": "^5.83.0"
+  }
 }

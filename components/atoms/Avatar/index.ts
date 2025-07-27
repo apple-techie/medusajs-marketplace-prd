@@ -1,1 +1,0 @@
-export { Avatar, AvatarGroup, type AvatarProps, type AvatarGroupProps, avatarVariants } from './Avatar';
